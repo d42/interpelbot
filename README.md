@@ -162,8 +162,17 @@ Ten projekt jest objęty licencją MIT. Zobacz plik [LICENSE](LICENSE) aby pozna
 
 ## 🤝 Wkład
 
-[Instrukcje dla kontrybutorów]
+Zachęcamy do kontrybucji! Jeśli chcesz dodać nowe funkcjonalności lub naprawić błędy:
+
+1. Sforkuj repozytorium
+2. Utwórz branch dla swojej funkcjonalności (`git checkout -b feature/amazing-feature`)
+3. Zcommituj zmiany (`git commit -m 'Add amazing feature'`)
+4. Wypushuj do brancha (`git push origin feature/amazing-feature`)
+5. Otwórz Pull Request
 
 ## 📞 Kontakt
 
-[Informacje kontaktowe] 
+**Autor:** Marcin Karwowski  
+**GitHub:** [@thoranrion](https://github.com/thoranrion)
+
+Jeśli masz pytania lub sugestie dotyczące projektu, skontaktuj się ze mną przez GitHub. 

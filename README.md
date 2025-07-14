@@ -158,7 +158,7 @@ Bot korzysta z oficjalnego API Sejmu RP:
 
 ## 📝 Licencja
 
-[Określ licencję projektu]
+Ten projekt jest objęty licencją MIT. Zobacz plik [LICENSE](LICENSE) aby poznać szczegóły.
 
 ## 🤝 Wkład
 

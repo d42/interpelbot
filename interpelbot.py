@@ -68,25 +68,27 @@ def compare_and_notify_new_answers(current_results, previous_results):
         current_id = current_item.get('id')
         if not current_id:
             continue
-        
-        # Skip if current item is marked as done
-        if current_item.get('done', False):
-            print(f"  ⏭️  Pomijam zakończoną interpelację {current_id}")
-            continue
             
         previous_item = previous_dict.get(current_id)
         
         if previous_item:
-            # Skip if previous item was also marked as done
-            if previous_item.get('done', False):
-                print(f"  ⏭️  Pomijam wcześniej zakończoną interpelację {current_id}")
-                continue
-                
             previous_replies = previous_item.get('replies', 0)
             current_replies = current_item.get('replies', 0)
             
             if current_replies > previous_replies:
                 new_count = current_replies - previous_replies
+                
+                # Check if any of the new replies has prolongation: true
+                has_prolongation = False
+                current_replies_data = current_item.get('replies_data', [])
+                if isinstance(current_replies_data, list) and len(current_replies_data) > previous_replies:
+                    # Check only the newest replies (those beyond the previous count)
+                    new_replies = current_replies_data[previous_replies:]
+                    for reply in new_replies:
+                        if isinstance(reply, dict) and reply.get('prolongation') == True:
+                            has_prolongation = True
+                            break
+                
                 new_answers.append({
                     'id': current_id,
                     'type': current_item.get('type'),
@@ -94,12 +96,22 @@ def compare_and_notify_new_answers(current_results, previous_results):
                     'url': current_item.get('url'),
                     'previous_replies': previous_replies,
                     'current_replies': current_replies,
-                    'new_count': new_count
+                    'new_count': new_count,
+                    'has_prolongation': has_prolongation
                 })
         else:
-            # New interpellation with answers (but not done)
+            # New interpellation with answers
             current_replies = current_item.get('replies', 0)
-            if current_replies > 0 and not current_item.get('done', False):
+            if current_replies > 0:
+                # Check if any of the replies has prolongation: true
+                has_prolongation = False
+                current_replies_data = current_item.get('replies_data', [])
+                if isinstance(current_replies_data, list):
+                    for reply in current_replies_data:
+                        if isinstance(reply, dict) and reply.get('prolongation') == True:
+                            has_prolongation = True
+                            break
+                
                 new_answers.append({
                     'id': current_id,
                     'type': current_item.get('type'),
@@ -107,7 +119,8 @@ def compare_and_notify_new_answers(current_results, previous_results):
                     'url': current_item.get('url'),
                     'previous_replies': 0,
                     'current_replies': current_replies,
-                    'new_count': current_replies
+                    'new_count': current_replies,
+                    'has_prolongation': has_prolongation
                 })
     
     # Send notifications if there are new answers
@@ -121,6 +134,11 @@ def compare_and_notify_new_answers(current_results, previous_results):
             message += f"### {answer['type']} ({answer['id']})\n"
             message += f"**{answer['title']}**\n"
             message += f"Odpowiedzi: {answer['previous_replies']} → {answer['current_replies']} (+{answer['new_count']})\n"
+            
+            # Add prolongation information if available
+            if answer.get('has_prolongation', False):
+                message += f"⏰ **Przedłużenie terminu odpowiedzi**\n"
+            
             message += f"🔗 [{answer['url']}]({answer['url']})\n\n"
         
         # Send to Mattermost
@@ -128,16 +146,13 @@ def compare_and_notify_new_answers(current_results, previous_results):
     else:
         print("📭 Brak nowych odpowiedzi")
 
-
-
 def save_results_to_json(results, filename="interpel.json"):
     """Save search results to JSON file"""
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     
-    # Count answers and closed interpellations
+    # Count answers
     answered_count = sum(1 for item in results if item.get('replies', 0) > 0)
-    closed_count = sum(1 for item in results if item.get('done', False))
     total_count = len(results)
     
     print(f"\n" + "="*60)
@@ -147,13 +162,10 @@ def save_results_to_json(results, filename="interpel.json"):
     print(f"Łączna liczba interpelacji: {total_count}")
     print(f"Interpelacje z odpowiedziami: {answered_count}")
     print(f"Interpelacje bez odpowiedzi: {total_count - answered_count}")
-    print(f"Zamknięte interpelacje: {closed_count}")
     
     if total_count > 0:
         answered_percentage = (answered_count / total_count) * 100
-        closed_percentage = (closed_count / total_count) * 100
         print(f"Procent interpelacji z odpowiedziami: {answered_percentage:.1f}%")
-        print(f"Procent zamkniętych interpelacji: {closed_percentage:.1f}%")
     
     print(f"="*60)
     return filename
@@ -249,16 +261,21 @@ def process_api_item(item, item_type):
         elif not isinstance(from_field, str):
             from_field = str(from_field) if from_field else ""
         
-        # Count replies and check if any has prolongation: false
+        # Count replies
         replies = item.get('replies', [])
         replies_count = len(replies) if isinstance(replies, list) else 0
         
-        is_done = False
+        # Filter replies to keep only key, prolongation, lastModified
+        filtered_replies = []
         if isinstance(replies, list):
             for reply in replies:
-                if isinstance(reply, dict) and reply.get('prolongation') == False:
-                    is_done = True
-                    break
+                if isinstance(reply, dict):
+                    filtered_reply = {
+                        'key': reply.get('key', ''),
+                        'prolongation': reply.get('prolongation', False),
+                        'lastModified': reply.get('lastModified', '')
+                    }
+                    filtered_replies.append(filtered_reply)
         
         return {
             'id': str(interpellation_id),
@@ -267,7 +284,7 @@ def process_api_item(item, item_type):
             'url': url,
             'from': from_field,
             'replies': replies_count,
-            'done': is_done
+            'replies_data': filtered_replies
         }
         
     except Exception as e:

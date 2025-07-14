@@ -117,7 +117,7 @@ Bot zapisuje dane w pliku `interpel.json` w następującym formacie:
 - `url` - Link do dokumentu
 - `from` - Autor interpelacji
 - `replies` - Liczba odpowiedzi (0 = brak odpowiedzi, >0 = ma odpowiedzi)
-- `done` - Czy interpelacja jest zakończona
+- `replies_data` - Dane odpowiedzi z API (key, prolongation, lastModified)
 
 ## 🔔 Powiadomienia
 
@@ -125,6 +125,7 @@ Bot wysyła powiadomienia do Mattermost w formacie Markdown zawierające:
 - Informacje o nowych odpowiedziach
 - Tytuły interpelacji
 - Liczbę odpowiedzi (poprzednia → aktualna)
+- Informację o przedłużeniu terminu odpowiedzi (tylko dla nowych odpowiedzi)
 - Linki do dokumentów
 
 ## 📈 Statystyki

@@ -28,7 +28,7 @@ InterpelBot to narzędzie Python, które:
 
 1. Sklonuj repozytorium:
 ```bash
-git clone <repository-url>
+git clone https://github.com/thoranrion/interpelbot.git
 cd interpelbot
 ```
 

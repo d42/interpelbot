@@ -17,7 +17,7 @@ InterpelBot to narzędzie Python, które:
 - **Monitorowanie zmian**: Porównywanie z poprzednimi wynikami i wykrywanie nowych odpowiedzi
 - **Powiadomienia**: Wysyłanie powiadomień do Mattermost o nowych odpowiedziach
 - **Statystyki**: Generowanie podsumowań z procentami odpowiedzi i zamkniętych interpelacji
-- **Konfiguracja**: Możliwość konfiguracji przez zmienne środowiskowe
+- **Konfiguracja**: Możliwość konfiguracji przez plik konfiguracyjny
 
 ## 📦 Wymagania
 
@@ -25,6 +25,8 @@ InterpelBot to narzędzie Python, które:
 - Biblioteka `requests`
 
 ## 🛠️ Instalacja
+
+### Opcja 1: Instalacja lokalna
 
 1. Sklonuj repozytorium:
 ```bash
@@ -37,48 +39,86 @@ cd interpelbot
 pip install -r requirements.txt
 ```
 
+### Opcja 2: Instalacja z Docker (zalecana)
+
+1. Sklonuj repozytorium:
+```bash
+git clone https://github.com/thoranrion/interpelbot.git
+cd interpelbot
+```
+
+2. Uruchom skrypt setup:
+```bash
+chmod +x setup-docker.sh
+./setup-docker.sh
+```
+
+3. Edytuj konfigurację w pliku `config.json`:
+```json
+{
+  "sejm_term": "10",
+  "mattermost_webhook_url": "https://your-mattermost.com/hooks/your-webhook-url",
+  "mps": [
+    {
+      "id": "",
+      "mattermost_users": ""
+    }
+  ]
+}
+```
+
+4. Uruchom kontener:
+```bash
+docker-compose up -d
+```
+
+5. Sprawdź logi:
+```bash
+docker-compose logs -f
+```
+
 ## ⚙️ Konfiguracja
 
-### Plik .env
+### Plik config.json
 
-W katalogu projektu znajduje się przykładowy plik `.env.example`. Możesz go skopiować jako `.env` i uzupełnić własnymi danymi:
+Bot używa pliku `config.json` do konfiguracji. Skopiuj plik przykładowy i edytuj go:
 
 ```bash
-cp .env.example .env
+cp config.json.example config.json
 ```
 
 Przykładowa zawartość:
 
+```json
+{
+  "sejm_term": "10",
+  "mattermost_webhook_url": "https://your-mattermost.com/hooks/your-webhook-url",
+  "mps": [
+    {
+      "id": "1",
+      "mattermost_users": "@user1,@user2"
+    },
+    {
+      "id": "2",
+      "mattermost_users": "@user3"
+    }
+  ]
+}
 ```
-# Przykładowy plik .env dla InterpelBot
-# Skopiuj ten plik jako .env i uzupełnij własnymi danymi
 
-MATTERMOST_WEBHOOK_URL=https://your-mattermost.com/hooks/your-webhook-url
-SEJM_TERM=10
-MP_ID=484
-```
+### Parametry konfiguracji
 
-Bot automatycznie załaduje te zmienne środowiskowe przy starcie.
-
-### Zmienne środowiskowe
-
-Bot używa następujących zmiennych środowiskowych (mogą być ustawione w pliku `.env` lub w systemie):
-
-| Zmienna | Opis | Domyślna wartość |
-|---------|------|------------------|
-| `MATTERMOST_WEBHOOK_URL` | URL webhook Mattermost do wysyłania powiadomień | - |
-| `SEJM_TERM` | Numer kadencji Sejmu | `10` |
-| `MP_ID` | ID posła do monitorowania | `484` |
-
-### Przykład konfiguracji
-
-```bash
-export MATTERMOST_WEBHOOK_URL="https://your-mattermost.com/hooks/your-webhook-url"
-export SEJM_TERM="10"
-export MP_ID="484"
-```
+| Parametr | Opis | Wymagany |
+|----------|------|----------|
+| `sejm_term` | Numer kadencji Sejmu | Tak |
+| `mattermost_webhook_url` | URL webhook Mattermost do wysyłania powiadomień | Tak |
+| `mps` | Lista posłów do monitorowania | Tak |
+| `mps[].id` | ID posła w systemie Sejmu | Tak |
+| `mps[].mattermost_users` | Użytkownicy Mattermost do powiadamiania | Nie |
 
 ## 🎯 Użycie
+
+### Uruchomienie lokalne
 
 Uruchom bot komendą:
 
@@ -86,15 +126,30 @@ Uruchom bot komendą:
 python interpelbot.py
 ```
 
+### Uruchomienie z Docker
+
+Bot uruchamia się automatycznie co godzinę w kontenerze Docker. Możesz również uruchomić go ręcznie:
+
+```bash
+# Uruchomienie jednorazowe
+docker-compose run --rm interpelbot python interpelbot.py
+
+# Sprawdzenie logów
+docker-compose logs -f
+
+# Zatrzymanie kontenera
+docker-compose down
+```
+
 Bot automatycznie:
-1. Pobierze interpelacje z API Sejmu
+1. Pobierze interpelacje z API Sejmu dla wszystkich posłów z konfiguracji
 2. Porówna z poprzednimi wynikami
 3. Wyśle powiadomienia o nowych odpowiedziach
-4. Zapisze wyniki do pliku `interpel.json`
+4. Zapisze wyniki do plików `interpel_{mp_id}.json` (w katalogu skryptu lub `/app/data/` w Docker)
 
 ## 📊 Format danych
 
-Bot zapisuje dane w pliku `interpel.json` w następującym formacie:
+Bot zapisuje dane w plikach `interpel_{mp_id}.json` w następującym formacie:
 
 ```json
 [
@@ -142,14 +197,40 @@ Bot korzysta z oficjalnego API Sejmu RP:
 - Interpelacje: `https://api.sejm.gov.pl/sejm/term{term}/interpellations`
 - Zapytania pisemne: `https://api.sejm.gov.pl/sejm/term{term}/writtenQuestions`
 
+## 🐳 Docker
+
+### Szczegóły techniczne
+
+- **Obraz bazowy**: `python:3.11-alpine` (minimalny rozmiar)
+- **Cron**: `dcron` (Alpine's cron daemon)
+- **Harmonogram**: Co godzinę (0 * * * *)
+- **Logi**: `/var/log/cron.log`
+- **Dane**: `/app/data/interpel.json`
+
+### Struktura katalogów
+
+```
+interpelbot/
+├── data/           # Dane aplikacji (montowane jako volume)
+├── logs/           # Logi kontenera (montowane jako volume)
+├── docker-compose.yml  # Konfiguracja zmiennych środowiskowych
+├── Dockerfile
+└── setup-docker.sh
+```
+
+### Konfiguracja Docker
+
+Konfiguracja jest przechowywana w pliku `config.json` w kontenerze. Edytuj ten plik przed uruchomieniem kontenera.
+
 ## 🐛 Rozwiązywanie problemów
 
 ### Brak powiadomień
-- Sprawdź czy `MATTERMOST_WEBHOOK_URL` jest poprawnie ustawione
+- Sprawdź czy `mattermost_webhook_url` w `config.json` jest poprawnie ustawione
 - Sprawdź połączenie z internetem
 
 ### Błędy API
-- Sprawdź czy `SEJM_TERM` i `MP_ID` są poprawne
+- Sprawdź czy `sejm_term` w `config.json` jest poprawny
+- Sprawdź czy ID posłów w `config.json` są poprawne
 - Sprawdź dostępność API Sejmu
 
 ### Błędy plików

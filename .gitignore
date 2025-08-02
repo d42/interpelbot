@@ -44,4 +44,6 @@ Thumbs.db
 
 # Project specific
 interpel.json
+interpel_*.json
+config.json
 *.log 

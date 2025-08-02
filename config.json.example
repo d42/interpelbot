@@ -1,0 +1,18 @@
+{
+  "sejm_term": "10",
+  "mattermost_webhook_url": "https://your-mattermost.com/hooks/your-webhook-url",
+  "mps": [
+    {
+      "id": "",
+      "mattermost_users": ""
+    },
+    {
+      "id": "",
+      "mattermost_users": ""
+    },
+    {
+      "id": "",
+      "mattermost_users": ""
+    }
+  ]
+} 

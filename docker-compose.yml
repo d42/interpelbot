@@ -18,6 +18,7 @@ services:
       - /opt/interpelbot/data:/app/data
       # Mount logs directory
       - /opt/interpelbot/logs:/var/log
+      - /opt/interpelbot/config.json:/app/config.json:ro
     healthcheck:
       test: ["CMD", "pgrep", "crond"]
       interval: 30s

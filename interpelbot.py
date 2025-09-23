@@ -20,8 +20,9 @@ def get_data_file_path(mp_id):
     if os.path.exists(docker_data_path):
         return docker_data_path
     
-    # Otherwise use the script directory
-    return os.path.join(script_dir, f"interpel_{mp_id}.json")
+    # Otherwise use the data subdirectory in the script directory
+    data_dir = os.path.join(script_dir, "data")
+    return os.path.join(data_dir, f"interpel_{mp_id}.json")
 
 def get_mattermost_webhook_url():
     """Get Mattermost webhook URL from config or environment variable"""

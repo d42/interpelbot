@@ -1,8 +1,7 @@
 version: '3.8'
-
 services:
   interpelbot:
-    image: harbor-dev.venceremos.eu/bots/interpelbot:latest
+    image: harbor-dev.venceremos.eu/bots/interpelbot:c8f4523ba169ae6cc9efa1082d3a8be71dd1ab2e
     container_name: interpelbot
     deploy:
       restart_policy:
@@ -12,16 +11,16 @@ services:
         window: 120s
     environment:
       - TZ=Europe/Warsaw
-      # Konfiguracja InterpelBot - edytuj plik config.json
     volumes:
-      # Mount data directory for persistence
       - /opt/interpelbot/data:/app/data
-      # Mount logs directory
       - /opt/interpelbot/logs:/var/log
       - /opt/interpelbot/config.json:/app/config.json:ro
     healthcheck:
-      test: ["CMD", "pgrep", "crond"]
+      test:
+        - CMD
+        - pgrep
+        - crond
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s 
+      start_period: 40s

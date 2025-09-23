@@ -18,7 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY interpelbot.py .
-COPY config.json .
 
 # Create data directory
 RUN mkdir -p /app/data

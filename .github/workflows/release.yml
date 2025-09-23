@@ -53,4 +53,4 @@ jobs:
           createPR: false
           updateFile: true
           token: ${{ secrets.TOKEN }}
-          message: 'Update Image Version to ${{ github.sha }}'
+          message: '[skip ci] Update Image Version to ${{ github.sha }}'

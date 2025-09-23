@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   interpelbot:
-    image: harbor-dev.venceremos.eu/bots/interpelbot:07997c62c569cba91ffd2599996f3edc1e4cde38
+    image: harbor-dev.venceremos.eu/bots/interpelbot:bb5dc3dc8c7419fd7fd3565a7dade542c6be460e
     container_name: interpelbot
     deploy:
       restart_policy:

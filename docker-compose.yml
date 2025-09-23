@@ -2,9 +2,14 @@ version: '3.8'
 
 services:
   interpelbot:
-    build: .
+    image: harbor-dev.venceremos.eu/bots/interpelbot:latest
     container_name: interpelbot
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 100
+        window: 120s
     environment:
       - TZ=Europe/Warsaw
       # Konfiguracja InterpelBot - edytuj plik config.json

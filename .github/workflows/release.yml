@@ -1,0 +1,54 @@
+name: Build Docker Image for interpelbot
+
+defaults:
+  run:
+    working-directory: ./
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - interpelbot.py
+      - Dockerfile
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - interpelbot.py
+      - Dockerfile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.12.2]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mr-smithers-excellent/docker-build-push@v6
+        id: image
+        name: Build & push Docker image
+        with:
+          image: bots/interpelbot
+          tags: latest, ${{ github.sha }}, ${{ github.run_number }}
+          dockerfile: ./Dockerfile
+          directory: .
+          registry: harbor-dev.venceremos.eu
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Update docker-compose.yml
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'docker-compose.yml'
+          propertyPath: 'services.interpelbot.image'
+          value: harbor-dev.venceremos.eu/bots/interpelbot:${{ github.sha }}
+          branch: main
+          targetBranch: main
+          commitChange: true
+          createPR: false
+          updateFile: true
+          token: ${{ secrets.TOKEN }}
+          message: 'Update Image Version to ${{ github.sha }}'

@@ -10,14 +10,12 @@ on:
     paths:
       - interpelbot.py
       - Dockerfile
-      - docker-compose.yml
       - .github/workflows/release.yml
   pull_request:
     branches: [ "main" ]
     paths:
       - interpelbot.py
       - Dockerfile
-      - docker-compose.yml
       - .github/workflows/release.yml
 
 jobs:
